@@ -146,7 +146,7 @@ fn part_one(input: &str) -> i32 {
     let mut found_paper_rolls = 0;
     for (i, row) in grid.iter().enumerate() {
         for (j, char) in row.iter().enumerate() {
-            if grid[i][j] != '@' {
+            if *char != '@' {
                 continue;
             }
 
@@ -164,18 +164,58 @@ fn part_one(input: &str) -> i32 {
     found_paper_rolls
 }
 
-fn part_two(input: &str) -> u32 {
-5
+fn part_two(input: &str) -> i32 {
+    let search_functions = vec![
+        check_target_north,
+        check_target_south,
+        check_target_east,
+        check_target_west,
+        check_target_north_east,
+        check_target_north_west,
+        check_target_south_east,
+        check_target_south_west
+    ];
+    let mut grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+    let mut found_paper_rolls = 0;
+    loop {
+        let mut found_paper_rolls_curr_iteration = 0;
+        let mut coordinates_roll_picked_up: Vec<(usize, usize)> = vec![];
+        for (i, row) in grid.iter().enumerate() {
+            for (j, char) in row.iter().enumerate() {
+                if *char != '@' {
+                    continue;
+                }
+
+                let found = search_functions
+                    .iter()
+                    .map(|function| function(i, j, &grid, "@@"))
+                    .filter(|search_result| *search_result)
+                    .count();
+
+                if found < 4 {
+                    found_paper_rolls_curr_iteration += 1;
+                    coordinates_roll_picked_up.push((i, j));
+                }
+            }
+        }
+        for coordinate in coordinates_roll_picked_up.iter() {
+            grid[coordinate.0][coordinate.1] = '.';
+        }
+        coordinates_roll_picked_up.clear();
+        found_paper_rolls += found_paper_rolls_curr_iteration;
+        if found_paper_rolls_curr_iteration == 0 {
+            break;
+        }
+    }
+    found_paper_rolls
 }
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // let input = utils::read_input(1);
     let input = utils::read_input_from_path("C:/git/magic/AdventOfCode/2025/advent_of_code_2025/input/day04.txt");
 
     let now = SystemTime::now();
     println!("Part One: {}", part_one(&input));
-    // 20000 too high, of course it is when you use input of day 3...
     println!("Elapsed time as:\n    Seconds: {} \n    Milliseconds: {}\n    Microseconds: {}\n",
              now.elapsed()?.as_secs(),
              now.elapsed()?.as_millis(),
